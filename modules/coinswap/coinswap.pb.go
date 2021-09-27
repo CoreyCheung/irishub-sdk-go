@@ -5,10 +5,9 @@ package coinswap
 
 import (
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	types "github.com/irisnet/irishub-sdk-go/types"
+	types "github.com/irisnet/core-sdk-go/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -150,7 +149,7 @@ var xxx_messageInfo_Pool proto.InternalMessageInfo
 
 // Params defines token module's parameters
 type Params struct {
-	Fee github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=fee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee"`
+	Fee types.Dec `protobuf:"bytes,1,opt,name=fee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"fee"`
 }
 
 func (m *Params) String() string {

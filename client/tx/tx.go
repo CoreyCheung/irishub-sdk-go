@@ -3,8 +3,8 @@ package tx
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type (

@@ -10,8 +10,8 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	service "github.com/irisnet/irishub-sdk-go/modules/service"
-	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/irishub-sdk-go/types"
-	types "github.com/irisnet/irishub-sdk-go/types"
+	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/core-sdk-go/types"
+	types "github.com/irisnet/core-sdk-go/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -309,7 +309,7 @@ type FeedContext struct {
 	Providers         []string                                      `protobuf:"bytes,3,rep,name=providers,proto3" json:"providers,omitempty"`
 	Input             string                                        `protobuf:"bytes,4,opt,name=input,proto3" json:"input,omitempty"`
 	Timeout           int64                                         `protobuf:"varint,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	ServiceFeeCap     github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,6,rep,name=service_fee_cap,json=serviceFeeCap,proto3,castrepeated=github.com/irisnet/irishub-sdk-go/types.Coins" json:"service_fee_cap" yaml:"service_fee_cap"`
+	ServiceFeeCap     github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,6,rep,name=service_fee_cap,json=serviceFeeCap,proto3,castrepeated=github.com/irisnet/core-sdk-go/types.Coins" json:"service_fee_cap" yaml:"service_fee_cap"`
 	RepeatedFrequency uint64                                        `protobuf:"varint,7,opt,name=repeated_frequency,json=repeatedFrequency,proto3" json:"repeated_frequency,omitempty" yaml:"repeated_frequency"`
 	ResponseThreshold uint32                                        `protobuf:"varint,8,opt,name=response_threshold,json=responseThreshold,proto3" json:"response_threshold,omitempty" yaml:"response_threshold"`
 	State             service.RequestContextState                   `protobuf:"varint,9,opt,name=state,proto3,enum=irismod.service.RequestContextState" json:"state,omitempty"`

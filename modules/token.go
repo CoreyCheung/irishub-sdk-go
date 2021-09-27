@@ -3,20 +3,20 @@ package modules
 import (
 	"context"
 	"fmt"
-	"strings"
-
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/irisnet/irishub-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec"
+	sdk "github.com/irisnet/core-sdk-go/types"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 	"github.com/irisnet/irishub-sdk-go/modules/token"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
 	"github.com/irisnet/irishub-sdk-go/utils/cache"
+	"github.com/tendermint/tendermint/libs/log"
+	"strings"
 )
+
 
 type tokenQuery struct {
 	q sdk.Queries
 	sdk.GRPCClient
-	cdc codec.Marshaler
+	cdc codec.Codec
 	log.Logger
 	cache.Cache
 }
@@ -30,7 +30,7 @@ func (l tokenQuery) QueryToken(denom string) (sdk.Token, error) {
 	conn, err := l.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return sdk.Token{}, sdk.Wrap(err)
+		return sdk.Token{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	response, err := token.NewQueryClient(conn).Token(
@@ -46,7 +46,7 @@ func (l tokenQuery) QueryToken(denom string) (sdk.Token, error) {
 
 	var srcToken token.TokenInterface
 	if err = l.cdc.UnpackAny(response.Token, &srcToken); err != nil {
-		return sdk.Token{}, sdk.Wrap(err)
+		return sdk.Token{}, sdkerrors.Wrapf(ErrUnpackAny,err.Error())
 	}
 	token := srcToken.(*token.Token).Convert().(sdk.Token)
 	l.SaveTokens(token)
@@ -63,32 +63,32 @@ func (l tokenQuery) SaveTokens(tokens ...sdk.Token) {
 	}
 }
 
-func (l tokenQuery) ToMinCoin(coins ...sdk.DecCoin) (dstCoins sdk.Coins, err sdk.Error) {
+func (l tokenQuery) ToMinCoin(coins ...sdk.DecCoin) (dstCoins sdk.Coins, err error) {
 	for _, coin := range coins {
 		token, err := l.QueryToken(coin.Denom)
 		if err != nil {
-			return nil, sdk.Wrap(err)
+			return nil, sdkerrors.Wrapf(ErrQueryToken,err.Error())
 		}
 
 		minCoin, err := token.GetCoinType().ConvertToMinCoin(coin)
 		if err != nil {
-			return nil, sdk.Wrap(err)
+			return nil, sdkerrors.Wrapf(ErrConvertToMinCoin,err.Error())
 		}
 		dstCoins = append(dstCoins, minCoin)
 	}
 	return dstCoins.Sort(), nil
 }
 
-func (l tokenQuery) ToMainCoin(coins ...sdk.Coin) (dstCoins sdk.DecCoins, err sdk.Error) {
+func (l tokenQuery) ToMainCoin(coins ...sdk.Coin) (dstCoins sdk.DecCoins, err error) {
 	for _, coin := range coins {
 		token, err := l.QueryToken(coin.Denom)
 		if err != nil {
-			return dstCoins, sdk.Wrap(err)
+			return dstCoins, sdkerrors.Wrapf(ErrToMintCoin,err.Error())
 		}
 
 		mainCoin, err := token.GetCoinType().ConvertToMainCoin(coin)
 		if err != nil {
-			return dstCoins, sdk.Wrap(err)
+			return dstCoins, sdkerrors.Wrapf(ErrToMintCoin,err.Error())
 		}
 		dstCoins = append(dstCoins, mainCoin)
 	}

@@ -1,15 +1,15 @@
 package random
 
-import sdk "github.com/irisnet/irishub-sdk-go/types"
+import sdk "github.com/irisnet/core-sdk-go/types"
 
 // expose Random module api for user
 type Client interface {
 	sdk.Module
 
-	RequestRandom(request RequestRandomRequest, basTx sdk.BaseTx) (RequestRandomResp, sdk.ResultTx, sdk.Error)
+	RequestRandom(request RequestRandomRequest, basTx sdk.BaseTx) (RequestRandomResp, sdk.ResultTx, error)
 
-	QueryRandom(ReqId string) (QueryRandomResp, sdk.Error)
-	QueryRandomRequestQueue(height int64) ([]QueryRandomRequestQueueResp, sdk.Error)
+	QueryRandom(ReqId string) (QueryRandomResp, error)
+	QueryRandomRequestQueue(height int64) ([]QueryRandomRequestQueueResp, error)
 }
 
 type RequestRandomRequest struct {

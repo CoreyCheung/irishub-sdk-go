@@ -9,9 +9,9 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/irishub-sdk-go/types"
-	types "github.com/irisnet/irishub-sdk-go/types"
-	query "github.com/irisnet/irishub-sdk-go/types/query"
+	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/core-sdk-go/types"
+	types "github.com/irisnet/core-sdk-go/types"
+	query "github.com/irisnet/core-sdk-go/types/query"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -1084,7 +1084,7 @@ func (m *QueryEarnedFeesRequest) GetProvider() string {
 
 // QueryEarnedFeesResponse is response type for the Query/EarnedFees RPC method
 type QueryEarnedFeesResponse struct {
-	Fees github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,1,rep,name=fees,proto3,castrepeated=github.com/irisnet/irishub-sdk-go/types.Coins" json:"fees" yaml:"service_fee"`
+	Fees github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,1,rep,name=fees,proto3,castrepeated=github.com/irisnet/core-sdk-go/types.Coins" json:"fees" yaml:"service_fee"`
 }
 
 func (m *QueryEarnedFeesResponse) Reset()         { *m = QueryEarnedFeesResponse{} }

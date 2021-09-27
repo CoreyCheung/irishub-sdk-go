@@ -1,10 +1,11 @@
 package nft
 
 import (
+	sdk "github.com/irisnet/core-sdk-go/types"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 	"strings"
-
-	sdk "github.com/irisnet/irishub-sdk-go/types"
 )
+
 
 const (
 	ModuleName = "nft"
@@ -28,26 +29,20 @@ func (m MsgIssueDenom) Type() string {
 
 func (m MsgIssueDenom) ValidateBasic() error {
 	if len(m.Sender) == 0 {
-		return sdk.Wrapf("missing sender address")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,"missing sender address")
 	}
 
 	if err := sdk.ValidateAccAddress(m.Sender); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 	id := strings.TrimSpace(m.Id)
 	if len(id) == 0 {
-		return sdk.Wrapf("missing id")
+		return sdkerrors.Wrapf(ErrInvalidTokenID,"missing id")
 	}
 	return nil
 }
 
-func (m MsgIssueDenom) GetSignBytes() []byte {
-	bz, err := ModuleCdc.MarshalJSON(&m)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
+
 
 func (m MsgIssueDenom) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(m.Sender)}
@@ -63,38 +58,32 @@ func (m MsgTransferNFT) Type() string {
 
 func (m MsgTransferNFT) ValidateBasic() error {
 	if len(m.Sender) == 0 {
-		return sdk.Wrapf("missing sender address")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,"missing sender address")
 	}
 	if err := sdk.ValidateAccAddress(m.Sender); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	if len(m.Recipient) == 0 {
-		return sdk.Wrapf("missing recipient address")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,"missing recipient address")
 	}
 	if err := sdk.ValidateAccAddress(m.Recipient); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	denom := strings.TrimSpace(m.DenomId)
 	if len(denom) == 0 {
-		return sdk.Wrapf("missing denom")
+		return sdkerrors.Wrapf(ErrInvalidDenom,"missing denom")
 	}
 
 	tokenID := strings.TrimSpace(m.Id)
 	if len(tokenID) == 0 {
-		return sdk.Wrapf("missing ID")
+		return sdkerrors.Wrapf(ErrInvalidTokenID,"missing ID")
 	}
 	return nil
 }
 
-func (m MsgTransferNFT) GetSignBytes() []byte {
-	bz, err := ModuleCdc.MarshalJSON(&m)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
+
 
 func (m MsgTransferNFT) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(m.Sender)}
@@ -110,31 +99,25 @@ func (m MsgEditNFT) Type() string {
 
 func (m MsgEditNFT) ValidateBasic() error {
 	if len(m.Sender) == 0 {
-		return sdk.Wrapf("missing sender address")
+		return sdkerrors.Wrapf(ErrInvalidAddress,"missing sender address")
 	}
 	if err := sdk.ValidateAccAddress(m.Sender); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	denom := strings.TrimSpace(m.DenomId)
 	if len(denom) == 0 {
-		return sdk.Wrapf("missing denom")
+		return sdkerrors.Wrapf(ErrInvalidDenom,"missing denom")
 	}
 
 	tokenID := strings.TrimSpace(m.Id)
 	if len(tokenID) == 0 {
-		return sdk.Wrapf("missing ID")
+		return sdkerrors.Wrapf(ErrInvalidTokenID,"missing ID")
 	}
 	return nil
 }
 
-func (m MsgEditNFT) GetSignBytes() []byte {
-	bz, err := ModuleCdc.MarshalJSON(&m)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
+
 
 func (m MsgEditNFT) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(m.Sender)}
@@ -150,31 +133,24 @@ func (m MsgMintNFT) Type() string {
 
 func (m MsgMintNFT) ValidateBasic() error {
 	if len(m.Sender) == 0 {
-		return sdk.Wrapf("missing sender address")
+		return sdkerrors.Wrapf(ErrInvalidAddress,"missing sender address")
 	}
 	if err := sdk.ValidateAccAddress(m.Sender); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	denom := strings.TrimSpace(m.DenomId)
 	if len(denom) == 0 {
-		return sdk.Wrapf("missing denom")
+		return sdkerrors.Wrapf(ErrInvalidDenom,"missing denom")
 	}
 
 	tokenID := strings.TrimSpace(m.Id)
 	if len(tokenID) == 0 {
-		return sdk.Wrapf("missing ID")
+		return sdkerrors.Wrapf(ErrInvalidTokenID,"missing ID")
 	}
 	return nil
 }
 
-func (m MsgMintNFT) GetSignBytes() []byte {
-	bz, err := ModuleCdc.MarshalJSON(&m)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
 
 func (m MsgMintNFT) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(m.Sender)}
@@ -190,30 +166,22 @@ func (m MsgBurnNFT) Type() string {
 
 func (m MsgBurnNFT) ValidateBasic() error {
 	if len(m.Sender) == 0 {
-		return sdk.Wrapf("missing sender address")
+		return sdkerrors.Wrapf(ErrInvalidAddress,"missing sender address")
 	}
 	if err := sdk.ValidateAccAddress(m.Sender); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	denom := strings.TrimSpace(m.DenomId)
 	if len(denom) == 0 {
-		return sdk.Wrapf("missing denom")
+		return sdkerrors.Wrapf(ErrInvalidDenom,"missing denom")
 	}
 
 	tokenID := strings.TrimSpace(m.Id)
 	if len(tokenID) == 0 {
-		return sdk.Wrapf("missing ID")
+		return sdkerrors.Wrapf(ErrInvalidTokenID,"missing ID")
 	}
 	return nil
-}
-
-func (m MsgBurnNFT) GetSignBytes() []byte {
-	bz, err := ModuleCdc.MarshalJSON(&m)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
 }
 
 func (m MsgBurnNFT) GetSigners() []sdk.AccAddress {

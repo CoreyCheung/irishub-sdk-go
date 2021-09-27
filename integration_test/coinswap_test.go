@@ -6,9 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/irisnet/core-sdk-go/types"
 	"github.com/irisnet/irishub-sdk-go/modules/coinswap"
+	sdkquery "github.com/irisnet/irishub-sdk-go/modules/coinswap"
 	"github.com/irisnet/irishub-sdk-go/modules/token"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
 )
 
 func (s IntegrationTestSuite) TestCoinSwap() {
@@ -65,7 +66,7 @@ func (s IntegrationTestSuite) TestCoinSwap() {
 }
 
 func (s IntegrationTestSuite) TestQuery() {
-	res, err := s.Swap.QueryAllPools(sdk.PageRequest{
+	res, err := s.Swap.QueryAllPools(sdkquery.PageRequest{
 		Offset:     0,
 		Limit:      10,
 		CountTotal: false,

@@ -7,8 +7,8 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/irishub-sdk-go/types"
-	types "github.com/irisnet/irishub-sdk-go/types"
+	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/core-sdk-go/types"
+	types "github.com/irisnet/core-sdk-go/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -30,7 +30,7 @@ type MsgRequestRandom struct {
 	BlockInterval uint64                                        `protobuf:"varint,1,opt,name=block_interval,json=blockInterval,proto3" json:"block_interval,omitempty" yaml:"block_interval"`
 	Consumer      string                                        `protobuf:"bytes,2,opt,name=consumer,proto3" json:"consumer,omitempty"`
 	Oracle        bool                                          `protobuf:"varint,3,opt,name=oracle,proto3" json:"oracle,omitempty"`
-	ServiceFeeCap github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,4,rep,name=service_fee_cap,json=serviceFeeCap,proto3,castrepeated=github.com/irisnet/irishub-sdk-go/types.Coins" json:"service_fee_cap" yaml:"service_fee_cap"`
+	ServiceFeeCap github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,4,rep,name=service_fee_cap,json=serviceFeeCap,proto3,castrepeated=github.com/irisnet/core-sdk-go/types.Coins" json:"service_fee_cap" yaml:"service_fee_cap"`
 }
 
 func (m *MsgRequestRandom) Reset()         { *m = MsgRequestRandom{} }

@@ -7,8 +7,9 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
-	"github.com/irisnet/irishub-sdk-go/crypto"
-	sdksecp256k1 "github.com/irisnet/irishub-sdk-go/crypto/keys/secp256k1"
+	"github.com/irisnet/core-sdk-go/crypto"
+	sdksecp256k1 "github.com/irisnet/core-sdk-go/crypto/keys/secp256k1"
+
 )
 
 // RecoveryAndExportPrivKeyArmor return the new private key armor(after IrisHubV1.0) from a old keystoreFile(before IrisHubV0.16)

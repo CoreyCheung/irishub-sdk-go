@@ -3,7 +3,7 @@ package utils
 import (
 	"crypto/rand"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 // GenerateRandomBytes returns securely generated random bytes.

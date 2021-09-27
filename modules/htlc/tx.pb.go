@@ -9,8 +9,8 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/irishub-sdk-go/types"
-	types "github.com/irisnet/irishub-sdk-go/types"
+	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/core-sdk-go/types"
+	types "github.com/irisnet/core-sdk-go/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -36,7 +36,7 @@ type MsgCreateHTLC struct {
 	To                   string                                        `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
 	ReceiverOnOtherChain string                                        `protobuf:"bytes,3,opt,name=receiver_on_other_chain,json=receiverOnOtherChain,proto3" json:"receiver_on_other_chain,omitempty" yaml:"receiver_on_other_chain"`
 	SenderOnOtherChain   string                                        `protobuf:"bytes,4,opt,name=sender_on_other_chain,json=senderOnOtherChain,proto3" json:"sender_on_other_chain,omitempty" yaml:"sender_on_other_chain"`
-	Amount               github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,5,rep,name=amount,proto3,castrepeated=github.com/irisnet/irishub-sdk-go/types.Coins" json:"amount"`
+	Amount               github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,5,rep,name=amount,proto3,castrepeated=github.com/irisnet/core-sdk-go/types.Coins" json:"amount"`
 	HashLock             string                                        `protobuf:"bytes,6,opt,name=hash_lock,json=hashLock,proto3" json:"hash_lock,omitempty" yaml:"hash_lock"`
 	Timestamp            uint64                                        `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	TimeLock             uint64                                        `protobuf:"varint,8,opt,name=time_lock,json=timeLock,proto3" json:"time_lock,omitempty" yaml:"time_lock"`

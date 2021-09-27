@@ -1,23 +1,23 @@
 package nft
 
-import sdk "github.com/irisnet/irishub-sdk-go/types"
+import sdk "github.com/irisnet/core-sdk-go/types"
 
 // expose NFT module api for user
 type Client interface {
 	sdk.Module
 
-	IssueDenom(request IssueDenomRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	MintNFT(request MintNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	EditNFT(request EditNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	TransferNFT(request TransferNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	BurnNFT(request BurnNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
+	IssueDenom(request IssueDenomRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	MintNFT(request MintNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	EditNFT(request EditNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	TransferNFT(request TransferNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	BurnNFT(request BurnNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
 
-	QuerySupply(denomID, creator string) (uint64, sdk.Error)
-	QueryOwner(creator, denomID string) (QueryOwnerResp, sdk.Error)
-	QueryCollection(denomID string) (QueryCollectionResp, sdk.Error)
-	QueryDenom(denomID string) (QueryDenomResp, sdk.Error)
-	QueryDenoms() ([]QueryDenomResp, sdk.Error)
-	QueryNFT(denomID, tokenID string) (QueryNFTResp, sdk.Error)
+	QuerySupply(denomID, creator string) (uint64, error)
+	QueryOwner(creator, denomID string) (QueryOwnerResp, error)
+	QueryCollection(denomID string) (QueryCollectionResp, error)
+	QueryDenom(denomID string) (QueryDenomResp, error)
+	QueryDenoms() ([]QueryDenomResp, error)
+	QueryNFT(denomID, tokenID string) (QueryNFTResp, error)
 }
 
 type IssueDenomRequest struct {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/irisnet/core-sdk-go/types"
 	"github.com/irisnet/irishub-sdk-go/modules/record"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
 )
 
 func (s IntegrationTestSuite) TestRecord() {

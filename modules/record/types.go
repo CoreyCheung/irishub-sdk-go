@@ -2,8 +2,8 @@ package record
 
 import (
 	"fmt"
-
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 )
 
 const (
@@ -25,14 +25,7 @@ func (msg MsgCreateRecord) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgCreateRecord) Type() string { return "create_record" }
 
-// GetSignBytes implements Msg.
-func (msg MsgCreateRecord) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
+
 
 // ValidateBasic implements Msg.
 func (msg MsgCreateRecord) ValidateBasic() error {
@@ -44,7 +37,7 @@ func (msg MsgCreateRecord) ValidateBasic() error {
 	}
 
 	if err := sdk.ValidateAccAddress(msg.Creator); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	for i, content := range msg.Contents {

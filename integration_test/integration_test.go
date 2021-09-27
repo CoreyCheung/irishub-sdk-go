@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/irisnet/core-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/types/store"
 	sdk "github.com/irisnet/irishub-sdk-go"
-	"github.com/irisnet/irishub-sdk-go/types"
-	"github.com/irisnet/irishub-sdk-go/types/store"
 	"github.com/irisnet/irishub-sdk-go/utils/log"
 
 	"github.com/stretchr/testify/suite"

@@ -4,25 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/irisnet/irishub-sdk-go/types/query"
+	"github.com/irisnet/core-sdk-go/types/query"
 	"strings"
 
-	ctypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/irisnet/irishub-sdk-go/codec"
-	"github.com/irisnet/irishub-sdk-go/codec/types"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec/types"
+	ctypes "github.com/irisnet/core-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 )
 
 type coinswapClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 	totalSupply
 }
 
-func NewClient(bc sdk.BaseClient, cdc codec.Marshaler, queryTotalSupply totalSupply) Client {
+func NewClient(bc sdk.BaseClient, cdc codec.Codec, queryTotalSupply totalSupply) Client {
 	return coinswapClient{
 		BaseClient:  bc,
-		Marshaler:   cdc,
+		Codec:   cdc,
 		totalSupply: queryTotalSupply,
 	}
 }
@@ -39,7 +40,7 @@ func (swap coinswapClient) AddLiquidity(request AddLiquidityRequest,
 	baseTx sdk.BaseTx) (*AddLiquidityResponse, error) {
 	creator, err := swap.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrap(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgAddLiquidity{
@@ -56,9 +57,10 @@ func (swap coinswapClient) AddLiquidity(request AddLiquidityRequest,
 	}
 
 	var totalCoins = sdk.NewCoins()
+
 	coinStrs := res.Events.GetValues(eventTypeTransfer, attributeKeyAmount)
 	for _, coinStr := range coinStrs {
-		coins, er := sdk.ParseCoins(coinStr)
+		coins, er := sdk.ParseCoinsNormalized(coinStr)
 		if er != nil {
 			swap.Logger().Error("Parse coin str failed", "coin", coinStr)
 			continue
@@ -83,7 +85,7 @@ func (swap coinswapClient) RemoveLiquidity(request RemoveLiquidityRequest,
 	baseTx sdk.BaseTx) (*RemoveLiquidityResponse, error) {
 	creator, err := swap.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrap(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgRemoveLiquidity{
@@ -102,7 +104,7 @@ func (swap coinswapClient) RemoveLiquidity(request RemoveLiquidityRequest,
 	var totalCoins = sdk.NewCoins()
 	coinStrs := res.Events.GetValues(eventTypeTransfer, attributeKeyAmount)
 	for _, coinStr := range coinStrs {
-		coins, er := sdk.ParseCoins(coinStr)
+		coins, er := sdk.ParseCoinsNormalized(coinStr)
 		if er != nil {
 			swap.Logger().Error("Parse coin str failed", "coin", coinStr)
 			continue
@@ -117,7 +119,7 @@ func (swap coinswapClient) RemoveLiquidity(request RemoveLiquidityRequest,
 
 	response := &RemoveLiquidityResponse{
 		TokenAmt:  totalCoins.AmountOf(tokenDenom),
-		BaseAmt:   totalCoins.AmountOf(sdk.BaseDenom),
+		BaseAmt:   totalCoins.AmountOf(BaseDenom),
 		Liquidity: request.Liquidity,
 		TxHash:    res.Hash,
 	}
@@ -127,7 +129,7 @@ func (swap coinswapClient) RemoveLiquidity(request RemoveLiquidityRequest,
 func (swap coinswapClient) SwapCoin(request SwapCoinRequest, baseTx sdk.BaseTx) (*SwapCoinResponse, error) {
 	creator, err := swap.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	input := Input{
@@ -163,7 +165,7 @@ func (swap coinswapClient) SwapCoin(request SwapCoinRequest, baseTx sdk.BaseTx) 
 
 	amt, ok := sdk.NewIntFromString(amount)
 	if !ok {
-		return nil, sdk.Wrapf("%s can not convert to sdk.Int type", amount)
+		return nil, sdkerrors.Wrapf(ErrConvertInt,fmt.Sprintf("%s can not convert to sdk.Int type", amount))
 	}
 
 	inputAmt := request.Input.Amount
@@ -188,10 +190,10 @@ func (swap coinswapClient) BuyTokenWithAutoEstimate(paidTokenDenom string, bough
 ) (res *SwapCoinResponse, err error) {
 	var amount = sdk.ZeroInt()
 	switch {
-	case paidTokenDenom == sdk.BaseDenom:
+	case paidTokenDenom == BaseDenom:
 		amount, err = swap.EstimateBaseForBoughtToken(boughtCoin)
 		break
-	case boughtCoin.Denom == sdk.BaseDenom:
+	case boughtCoin.Denom == BaseDenom:
 		amount, err = swap.EstimateTokenForBoughtBase(paidTokenDenom, boughtCoin.Amount)
 		break
 	default:
@@ -218,10 +220,10 @@ func (swap coinswapClient) SellTokenWithAutoEstimate(gotTokenDenom string, soldC
 ) (res *SwapCoinResponse, err error) {
 	var amount = sdk.ZeroInt()
 	switch {
-	case gotTokenDenom == sdk.BaseDenom:
+	case gotTokenDenom == BaseDenom:
 		amount, err = swap.EstimateBaseForSoldToken(soldCoin)
 		break
-	case soldCoin.Denom == sdk.BaseDenom:
+	case soldCoin.Denom == BaseDenom:
 		amount, err = swap.EstimateTokenForSoldBase(gotTokenDenom, soldCoin.Amount)
 		break
 	default:
@@ -246,7 +248,7 @@ func (swap coinswapClient) QueryPool(lptDenom string) (*QueryPoolResponse, error
 	conn, err := swap.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	resp, err := NewQueryClient(conn).LiquidityPool(
@@ -254,16 +256,16 @@ func (swap coinswapClient) QueryPool(lptDenom string) (*QueryPoolResponse, error
 		&QueryLiquidityPoolRequest{LptDenom: lptDenom},
 	)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrLiquidityPool,err.Error())
 	}
 	return resp.Convert().(*QueryPoolResponse), err
 }
 
-func (swap coinswapClient) QueryAllPools(req sdk.PageRequest) (*QueryAllPoolsResponse, error) {
+func (swap coinswapClient) QueryAllPools(req PageRequest) (*QueryAllPoolsResponse, error) {
 	conn, err := swap.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	resp, err := NewQueryClient(conn).LiquidityPools(
@@ -278,7 +280,7 @@ func (swap coinswapClient) QueryAllPools(req sdk.PageRequest) (*QueryAllPoolsRes
 		},
 	)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrLiquidityPool,err.Error())
 	}
 	return resp.Convert().(*QueryAllPoolsResponse), err
 }
@@ -357,15 +359,15 @@ func (swap coinswapClient) EstimateTokenForBoughtToken(soldTokenDenom string,
 }
 
 func GetLiquidityDenomFrom(denom string) (string, error) {
-	if denom == sdk.BaseDenom {
-		return "", sdk.Wrapf("should not be base denom : %s", denom)
+	if denom == BaseDenom {
+		return "", sdkerrors.Wrapf(ErrDenom,"should not be base denom : %s", denom)
 	}
 	return fmt.Sprintf("swap%s", denom), nil
 }
 
 func GetTokenDenomFrom(liquidityDenom string) (string, error) {
 	if !strings.HasPrefix(liquidityDenom, "swap") {
-		return "", sdk.Wrapf("wrong liquidity denom : %s", liquidityDenom)
+		return "", sdkerrors.Wrapf(ErrPrefix,"wrong liquidity denom : %s", liquidityDenom)
 	}
 	return strings.TrimPrefix(liquidityDenom, "swap"), nil
 }

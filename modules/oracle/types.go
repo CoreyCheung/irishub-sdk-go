@@ -3,10 +3,11 @@ package oracle
 import (
 	"bytes"
 	"fmt"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 	"regexp"
 	"strings"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 const (
@@ -37,63 +38,53 @@ func (msg MsgCreateFeed) Type() string {
 func (msg MsgCreateFeed) ValidateBasic() error {
 	feedName := strings.TrimSpace(msg.FeedName)
 	if len(feedName) == 0 {
-		return sdk.Wrapf("missing feed name")
+		return sdkerrors.Wrapf(ErrInvalidFeedName,"missing feed name")
 	}
 	if !regPlainText.MatchString(feedName) {
-		return sdk.Wrapf("invalid feed name: %s", feedName)
+		return sdkerrors.Wrapf(ErrMatchString,"invalid feed name: %s", feedName)
 	}
 
 	if len(msg.Description) == 0 {
-		return sdk.Wrapf("missing description")
+		return sdkerrors.Wrapf(ErrInvalidDescription,"missing description")
 	}
 
 	if len(msg.ServiceName) == 0 {
-		return sdk.Wrapf("missing name")
+		return sdkerrors.Wrapf(ErrInvalidServiceName,"missing name")
 	}
 	if !regPlainText.MatchString(msg.ServiceName) {
-		return sdk.Wrapf("invalid service name %s", msg.ServiceName)
+		return sdkerrors.Wrapf(ErrMatchString,"invalid service name %s", msg.ServiceName)
 	}
 
 	if msg.LatestHistory == 0 {
-		return sdk.Wrapf("missing latest history")
+		return sdkerrors.Wrapf(ErrLatestHistory,"missing latest history")
 	}
 
 	if err := validateTimeout(msg.Timeout, msg.RepeatedFrequency); err != nil {
 		return err
 	}
 	if len(msg.Providers) == 0 {
-		return sdk.Wrapf("providers missing")
+		return sdkerrors.Wrapf(ErrValidateTimeout,"providers missing")
 	}
 
 	if len(msg.AggregateFunc) == 0 {
-		return sdk.Wrapf("missing aggregateFunc")
+		return sdkerrors.Wrapf(ErrAggregateFunc,"missing aggregateFunc")
 	}
 
 	if len(msg.ValueJsonPath) == 0 {
-		return sdk.Wrapf("missing valueJsonPath")
+		return sdkerrors.Wrapf(ErrValueJsonPath,"missing valueJsonPath")
 	}
 
 	if !msg.ServiceFeeCap.IsValid() {
-		return sdk.Wrapf(msg.ServiceFeeCap.String())
+		return sdkerrors.Wrapf(ErrInvalidServiceFeeCap,msg.ServiceFeeCap.String())
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
-		return sdk.Wrapf("invalid creator")
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid creator")
 	}
 
 	return validateResponseThreshold(msg.ResponseThreshold, len(msg.Providers))
 }
 
-// GetSignBytes implements Msg.
-func (msg MsgCreateFeed) GetSignBytes() []byte {
-	if len(msg.Providers) == 0 {
-		msg.Providers = nil
-	}
-	if msg.ServiceFeeCap.Empty() {
-		msg.ServiceFeeCap = nil
-	}
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
 
 // GetSigners implements Msg.
 func (msg MsgCreateFeed) GetSigners() []sdk.AccAddress {
@@ -104,32 +95,21 @@ func (msg MsgCreateFeed) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg MsgStartFeed) Route() string {
-	return ModuleName
-}
-
-func (msg MsgStartFeed) Type() string {
-	return "start_feed"
-}
-
 func (msg MsgStartFeed) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
-		return sdk.Wrapf("invalid creator")
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid creator")
 	}
 
 	feedName := strings.TrimSpace(msg.FeedName)
 	if len(feedName) == 0 {
-		return sdk.Wrapf("missing feed name")
+		return sdkerrors.Wrapf(ErrInvalidFeedName,"missing feed name")
 	}
 	if !regPlainText.MatchString(feedName) {
-		return sdk.Wrapf("invalid feed name: %s", feedName)
+		return sdkerrors.Wrapf(ErrMatchString,"invalid feed name: %s", feedName)
 	}
 	return nil
 }
 
-func (msg MsgStartFeed) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
 
 func (msg MsgStartFeed) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -149,22 +129,19 @@ func (msg MsgPauseFeed) Type() string {
 
 func (msg MsgPauseFeed) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
-		return sdk.Wrapf("invalid creator")
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid creator")
 	}
 
 	feedName := strings.TrimSpace(msg.FeedName)
 	if len(feedName) == 0 {
-		return sdk.Wrapf("missing feed name")
+		return sdkerrors.Wrapf(ErrInvalidFeedName,"missing feed name")
 	}
 	if !regPlainText.MatchString(feedName) {
-		return sdk.Wrapf("invalid feed name: %s", feedName)
+		return sdkerrors.Wrapf(ErrInvalidFeedName,"invalid feed name: %s", feedName)
 	}
 	return nil
 }
 
-func (msg MsgPauseFeed) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
 
 func (msg MsgPauseFeed) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -185,18 +162,18 @@ func (msg MsgEditFeed) Type() string {
 func (msg MsgEditFeed) ValidateBasic() error {
 	feedName := strings.TrimSpace(msg.FeedName)
 	if len(feedName) == 0 {
-		return sdk.Wrapf("missing feed name")
+		return sdkerrors.Wrapf(ErrInvalidFeedName,"missing feed name")
 	}
 	if !regPlainText.MatchString(feedName) {
-		return sdk.Wrapf("invalid feed name: %s", feedName)
+		return sdkerrors.Wrapf(ErrMatchString,"invalid feed name: %s", feedName)
 	}
 
 	if len(msg.Description) == 0 {
-		return sdk.Wrapf("missing description")
+		return sdkerrors.Wrapf(ErrInvalidDescription,"missing description")
 	}
 
 	if msg.ServiceFeeCap != nil && !msg.ServiceFeeCap.IsValid() {
-		return sdk.Wrapf(msg.ServiceFeeCap.String())
+		return sdkerrors.Wrapf(ErrServiceFeeCap,msg.ServiceFeeCap.String())
 	}
 	if msg.Timeout != 0 && msg.RepeatedFrequency != 0 {
 		if err := validateTimeout(msg.Timeout, msg.RepeatedFrequency); err != nil {
@@ -210,20 +187,11 @@ func (msg MsgEditFeed) ValidateBasic() error {
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
-		return sdk.Wrapf("invalid creator")
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid creator")
 	}
 	return nil
 }
 
-func (msg MsgEditFeed) GetSignBytes() []byte {
-	if len(msg.Providers) == 0 {
-		msg.Providers = nil
-	}
-	if msg.ServiceFeeCap.Empty() {
-		msg.ServiceFeeCap = nil
-	}
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
 
 func (msg MsgEditFeed) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -235,14 +203,14 @@ func (msg MsgEditFeed) GetSigners() []sdk.AccAddress {
 
 func validateResponseThreshold(responseThreshold uint32, maxCnt int) error {
 	if (maxCnt != 0 && int(responseThreshold) > maxCnt) || responseThreshold < 1 {
-		return sdk.Wrapf("response threshold should be between 1 and %d", maxCnt)
+		return sdkerrors.Wrapf(ErrResponseThreshold,"response threshold should be between 1 and %d", maxCnt)
 	}
 	return nil
 }
 
 func validateTimeout(timeout int64, frequency uint64) error {
 	if frequency < uint64(timeout) {
-		return sdk.Wrapf("timeout [%d] should be no more than frequency [%d]", timeout, frequency)
+		return sdkerrors.Wrapf(ErrInvalidTimeout,"timeout [%d] should be no more than frequency [%d]", timeout, frequency)
 	}
 	return nil
 }

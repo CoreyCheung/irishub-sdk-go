@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
+	sdk "github.com/irisnet/core-sdk-go/types"
 	"github.com/irisnet/irishub-sdk-go/modules/htlc"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
 )
 
 func (s IntegrationTestSuite) TestHTLC() {

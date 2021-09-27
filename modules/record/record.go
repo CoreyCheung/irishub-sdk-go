@@ -2,21 +2,22 @@ package record
 
 import (
 	"encoding/hex"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	"github.com/irisnet/irishub-sdk-go/codec/types"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type recordClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 }
 
-func NewClient(bc sdk.BaseClient, cdc codec.Marshaler) Client {
+func NewClient(bc sdk.BaseClient, cdc codec.Codec) Client {
 	return recordClient{
 		BaseClient: bc,
-		Marshaler:  cdc,
+		Codec:      cdc,
 	}
 }
 
@@ -28,10 +29,10 @@ func (r recordClient) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	RegisterInterfaces(registry)
 }
 
-func (r recordClient) CreateRecord(request CreateRecordRequest, baseTx sdk.BaseTx) (string, sdk.Error) {
+func (r recordClient) CreateRecord(request CreateRecordRequest, baseTx sdk.BaseTx) (string, error) {
 	creator, err := r.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return "", sdk.Wrap(err)
+		return "", sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgCreateRecord{
@@ -46,28 +47,28 @@ func (r recordClient) CreateRecord(request CreateRecordRequest, baseTx sdk.BaseT
 
 	recordID, er := res.Events.GetValue(eventTypeCreateRecord, attributeKeyRecordID)
 	if er != nil {
-		return "", sdk.Wrap(er)
+		return "", sdkerrors.Wrapf(ErrEventsGetValue,err.Error())
 	}
 
 	return recordID, nil
 }
 
-func (r recordClient) QueryRecord(request QueryRecordReq) (QueryRecordResp, sdk.Error) {
+func (r recordClient) QueryRecord(request QueryRecordReq) (QueryRecordResp, error) {
 	rID, err := hex.DecodeString(request.RecordID)
 	if err != nil {
-		return QueryRecordResp{}, sdk.Wrapf("invalid record id, must be hex encoded string,but got %s", request.RecordID)
+		return QueryRecordResp{}, sdkerrors.Wrapf(ErrDecodeString,"invalid record id, must be hex encoded string,but got %s", request.RecordID)
 	}
 
 	recordKey := GetRecordKey(rID)
 
 	res, err := r.QueryStore(recordKey, ModuleName, request.Height, request.Prove)
 	if err != nil {
-		return QueryRecordResp{}, sdk.Wrap(err)
+		return QueryRecordResp{}, sdkerrors.Wrapf(ErrQueryStore,err.Error())
 	}
 
 	var record Record
-	if err := r.Marshaler.UnmarshalBinaryBare(res.Value, &record); err != nil {
-		return QueryRecordResp{}, sdk.Wrap(err)
+	if err := r.Codec.Unmarshal(res.Value, &record); err != nil {
+		return QueryRecordResp{}, sdkerrors.Wrapf(ErrCodecUnmarshal,err.Error())
 	}
 
 	result := record.Convert().(QueryRecordResp)
@@ -77,7 +78,7 @@ func (r recordClient) QueryRecord(request QueryRecordReq) (QueryRecordResp, sdk.
 		proof = r.MustMarshalJSON(res.ProofOps)
 	}
 
-	result.Proof = sdk.ProofValue{
+	result.Proof = ProofValue{
 		Proof: proof,
 		Path:  []string{ModuleName, string(recordKey)},
 		Value: res.Value,

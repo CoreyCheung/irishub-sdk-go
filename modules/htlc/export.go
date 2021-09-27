@@ -1,16 +1,18 @@
 package htlc
 
-import sdk "github.com/irisnet/irishub-sdk-go/types"
+import (
+	sdk "github.com/irisnet/core-sdk-go/types"
+)
 
 // expose HTLC module api for user
 type Client interface {
 	sdk.Module
 
-	CreateHTLC(request CreateHTLCRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	ClaimHTLC(hashLock string, secret string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
+	CreateHTLC(request CreateHTLCRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	ClaimHTLC(hashLock string, secret string, baseTx sdk.BaseTx) (sdk.ResultTx, error)
 
-	QueryHTLC(hashLock string) (QueryHTLCResp, sdk.Error)
-	QueryParams() (QueryParamsResp, sdk.Error)
+	QueryHTLC(hashLock string) (QueryHTLCResp, error)
+	QueryParams() (QueryParamsResp, error)
 }
 
 type CreateHTLCRequest struct {

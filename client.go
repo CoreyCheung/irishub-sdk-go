@@ -3,27 +3,27 @@ package sdk
 import (
 	"fmt"
 
+	"github.com/irisnet/core-sdk-go/modules/gov"
+	"github.com/irisnet/core-sdk-go/modules/staking"
 	"github.com/irisnet/irishub-sdk-go/modules/coinswap"
-	"github.com/irisnet/irishub-sdk-go/modules/gov"
 	"github.com/irisnet/irishub-sdk-go/modules/htlc"
 	"github.com/irisnet/irishub-sdk-go/modules/nft"
 	"github.com/irisnet/irishub-sdk-go/modules/oracle"
 	"github.com/irisnet/irishub-sdk-go/modules/random"
 	"github.com/irisnet/irishub-sdk-go/modules/record"
-	"github.com/irisnet/irishub-sdk-go/modules/staking"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	cdctypes "github.com/irisnet/irishub-sdk-go/codec/types"
-	cryptocodec "github.com/irisnet/irishub-sdk-go/crypto/codec"
+	"github.com/irisnet/core-sdk-go/codec"
+	cdctypes "github.com/irisnet/core-sdk-go/codec/types"
+	cryptocodec "github.com/irisnet/core-sdk-go/crypto/codec"
+	"github.com/irisnet/core-sdk-go/modules/bank"
+	"github.com/irisnet/core-sdk-go/types"
+	txtypes "github.com/irisnet/core-sdk-go/types/tx"
 	"github.com/irisnet/irishub-sdk-go/modules"
-	"github.com/irisnet/irishub-sdk-go/modules/bank"
 	"github.com/irisnet/irishub-sdk-go/modules/keys"
 	"github.com/irisnet/irishub-sdk-go/modules/service"
 	"github.com/irisnet/irishub-sdk-go/modules/token"
-	"github.com/irisnet/irishub-sdk-go/types"
-	txtypes "github.com/irisnet/irishub-sdk-go/types/tx"
 )
 
 type IRISHUBClient struct {
@@ -50,21 +50,21 @@ func NewIRISHUBClient(cfg types.ClientConfig) IRISHUBClient {
 	encodingConfig := makeEncodingConfig()
 
 	// create a instance of baseClient
-	baseClient := modules.NewBaseClient(cfg, encodingConfig, nil)
+	//baseClient := modules.NewBaseClient(cfg, encodingConfig, nil)
 	keysClient := keys.NewClient(baseClient)
 
-	bankClient := bank.NewClient(baseClient, encodingConfig.Marshaler)
-	tokenClient := token.NewClient(baseClient, encodingConfig.Marshaler)
-	stakingClient := staking.NewClient(baseClient, encodingConfig.Marshaler)
-	govClient := gov.NewClient(baseClient, encodingConfig.Marshaler)
+	bankClient := bank.NewClient(baseClient, encodingConfig.Codec)
+	tokenClient := token.NewClient(baseClient, encodingConfig.Codec)
+	stakingClient := staking.NewClient(baseClient, encodingConfig.Codec)
+	govClient := gov.NewClient(baseClient, encodingConfig.Codec)
 
-	serviceClient := service.NewClient(baseClient, encodingConfig.Marshaler)
-	recordClient := record.NewClient(baseClient, encodingConfig.Marshaler)
-	nftClient := nft.NewClient(baseClient, encodingConfig.Marshaler)
-	randomClient := random.NewClient(baseClient, encodingConfig.Marshaler)
-	oracleClient := oracle.NewClient(baseClient, encodingConfig.Marshaler)
-	htlcClient := htlc.NewClient(baseClient, encodingConfig.Marshaler)
-	swapClient := coinswap.NewClient(baseClient, encodingConfig.Marshaler, bankClient.TotalSupply)
+	serviceClient := service.NewClient(baseClient, encodingConfig.Codec)
+	recordClient := record.NewClient(baseClient, encodingConfig.Codec)
+	nftClient := nft.NewClient(baseClient, encodingConfig.Codec)
+	randomClient := random.NewClient(baseClient, encodingConfig.Codec)
+	oracleClient := oracle.NewClient(baseClient, encodingConfig.Codec)
+	htlcClient := htlc.NewClient(baseClient, encodingConfig.Codec)
+	swapClient := coinswap.NewClient(baseClient, encodingConfig.Codec, bankClient.TotalSupply)
 
 	client := &IRISHUBClient{
 		logger:         baseClient.Logger(),
@@ -105,12 +105,12 @@ func (client *IRISHUBClient) SetLogger(logger log.Logger) {
 	client.BaseClient.SetLogger(logger)
 }
 
-func (client *IRISHUBClient) Codec() *codec.LegacyAmino {
-	return client.encodingConfig.Amino
+func (client *IRISHUBClient) Codec() codec.Codec {
+	return client.encodingConfig.Codec
 }
 
-func (client *IRISHUBClient) AppCodec() codec.Marshaler {
-	return client.encodingConfig.Marshaler
+func (client *IRISHUBClient) AppCodec() codec.Codec {
+	return client.encodingConfig.Codec
 }
 
 func (client *IRISHUBClient) EncodingConfig() types.EncodingConfig {
@@ -139,28 +139,25 @@ func (client *IRISHUBClient) Module(name string) types.Module {
 }
 
 func makeEncodingConfig() types.EncodingConfig {
-	amino := codec.NewLegacyAmino()
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	txCfg := txtypes.NewTxConfig(marshaler, txtypes.DefaultSignModes)
 
 	encodingConfig := types.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         marshaler,
+		Codec:             marshaler,
 		TxConfig:          txCfg,
-		Amino:             amino,
 	}
-	RegisterLegacyAminoCodec(encodingConfig.Amino)
 	RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }
 
 // RegisterLegacyAminoCodec registers the sdk message type.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*types.Msg)(nil), nil)
-	cdc.RegisterInterface((*types.Tx)(nil), nil)
-	cryptocodec.RegisterCrypto(cdc)
-}
+//func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+//	cdc.RegisterInterface((*types.Msg)(nil), nil)
+//	cdc.RegisterInterface((*types.Tx)(nil), nil)
+//	cryptocodec.RegisterCrypto(cdc)
+//}
 
 // RegisterInterfaces registers the sdk message type.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

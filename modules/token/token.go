@@ -5,22 +5,23 @@ package token
 
 import (
 	"context"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 	"strconv"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	"github.com/irisnet/irishub-sdk-go/codec/types"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type tokenClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 }
 
-func NewClient(bc sdk.BaseClient, cdc codec.Marshaler) Client {
+func NewClient(bc sdk.BaseClient, cdc codec.Codec) Client {
 	return tokenClient{
 		BaseClient: bc,
-		Marshaler:  cdc,
+		Codec:  cdc,
 	}
 }
 
@@ -32,10 +33,10 @@ func (t tokenClient) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	RegisterInterfaces(registry)
 }
 
-func (t tokenClient) IssueToken(req IssueTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (t tokenClient) IssueToken(req IssueTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	owner, err := t.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgIssueToken{
@@ -52,10 +53,10 @@ func (t tokenClient) IssueToken(req IssueTokenRequest, baseTx sdk.BaseTx) (sdk.R
 	return t.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (t tokenClient) EditToken(req EditTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (t tokenClient) EditToken(req EditTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	owner, err := t.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgEditToken{
@@ -69,14 +70,14 @@ func (t tokenClient) EditToken(req EditTokenRequest, baseTx sdk.BaseTx) (sdk.Res
 	return t.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (t tokenClient) TransferToken(to string, symbol string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (t tokenClient) TransferToken(to string, symbol string, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	owner, err := t.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	if err := sdk.ValidateAccAddress(to); err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgTransferTokenOwner{
@@ -87,16 +88,16 @@ func (t tokenClient) TransferToken(to string, symbol string, baseTx sdk.BaseTx) 
 	return t.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (t tokenClient) MintToken(symbol string, amount uint64, to string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (t tokenClient) MintToken(symbol string, amount uint64, to string, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	owner, err := t.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	receipt := owner.String()
 	if len(to) != 0 {
 		if err := sdk.ValidateAccAddress(to); err != nil {
-			return sdk.ResultTx{}, sdk.Wrap(err)
+			return sdk.ResultTx{}, sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 		} else {
 			receipt = to
 		}
@@ -119,7 +120,7 @@ func (t tokenClient) QueryTokens(owner string) (sdk.Tokens, error) {
 	var ownerAddr string
 	if len(owner) > 0 {
 		if err := sdk.ValidateAccAddress(owner); err != nil {
-			return nil, sdk.Wrap(err)
+			return nil, sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 		}
 		ownerAddr = owner
 	}
@@ -128,7 +129,7 @@ func (t tokenClient) QueryTokens(owner string) (sdk.Tokens, error) {
 	defer func() { _ = conn.Close() }()
 
 	if err != nil {
-		return sdk.Tokens{}, sdk.Wrap(err)
+		return sdk.Tokens{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	request := &QueryTokensRequest{
@@ -158,7 +159,7 @@ func (t tokenClient) QueryFees(symbol string) (QueryFeesResp, error) {
 	conn, err := t.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryFeesResp{}, sdk.Wrap(err)
+		return QueryFeesResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	request := &QueryFeesRequest{
@@ -177,7 +178,7 @@ func (t tokenClient) QueryParams() (QueryParamsResp, error) {
 	conn, err := t.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryParamsResp{}, sdk.Wrap(err)
+		return QueryParamsResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Params(
@@ -185,7 +186,7 @@ func (t tokenClient) QueryParams() (QueryParamsResp, error) {
 		&QueryParamsRequest{},
 	)
 	if err != nil {
-		return QueryParamsResp{}, sdk.Wrap(err)
+		return QueryParamsResp{}, sdkerrors.Wrapf(ErrQueryParams,err.Error())
 	}
 
 	return res.Params.Convert().(QueryParamsResp), nil

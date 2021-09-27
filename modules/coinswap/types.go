@@ -1,7 +1,8 @@
 package coinswap
 
 import (
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 )
 
 const (
@@ -19,43 +20,30 @@ var (
 	_ sdk.Msg = &MsgSwapOrder{}
 )
 
-type totalSupply = func() (sdk.Coins, sdk.Error)
+type totalSupply = func() (sdk.Coins, error)
 
-// Route implements Msg.
-func (msg MsgAddLiquidity) Route() string { return ModuleName }
 
-// Type implements Msg.
-func (msg MsgAddLiquidity) Type() string { return "add_liquidity" }
-
-// GetSignBytes implements Msg.
-func (msg MsgAddLiquidity) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgAddLiquidity) ValidateBasic() error {
 	if !(msg.MaxToken.IsValid() && msg.MaxToken.IsPositive()) {
-		return sdk.Wrapf("invalid MaxToken: %s", msg.MaxToken.String())
+		return sdkerrors.Wrapf(ErrTokenCount, "invalid MaxToken: %s", msg.MaxToken.String())
 	}
 
 	if !msg.ExactStandardAmt.IsPositive() {
-		return sdk.Wrapf("standard token amount must be positive")
+		return sdkerrors.Wrapf(ErrTokenCount, "standard token amount must be positive")
 	}
 
 	if msg.MinLiquidity.IsNegative() {
-		return sdk.Wrapf("minimum liquidity can not be negative")
+		return sdkerrors.Wrapf(ErrTokenCount, "minimum liquidity can not be negative")
 	}
 
 	if msg.Deadline <= 0 {
-		return sdk.Wrapf("deadline %d must be greater than 0", msg.Deadline)
+		return sdkerrors.Wrapf(ErrDeadline, "deadline %d must be greater than 0", msg.Deadline)
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32, err.Error())
 	}
 	return nil
 }
@@ -83,16 +71,16 @@ func (msg MsgRemoveLiquidity) GetSignBytes() []byte {
 // ValidateBasic implements Msg.
 func (msg MsgRemoveLiquidity) ValidateBasic() error {
 	if msg.MinToken.IsNegative() {
-		return sdk.Wrapf("minimum token amount can not be negative")
+		return sdkerrors.Wrapf(ErrTokenCount, "minimum token amount can not be negative")
 	}
 	if !msg.WithdrawLiquidity.IsValid() || !msg.WithdrawLiquidity.IsPositive() {
-		return sdk.Wrapf("invalid withdrawLiquidity (%s)", msg.WithdrawLiquidity.String())
+		return sdkerrors.Wrapf(ErrTokenCount, "invalid withdrawLiquidity (%s)", msg.WithdrawLiquidity.String())
 	}
 	if msg.MinStandardAmt.IsNegative() {
-		return sdk.Wrapf("minimum standard token amount %s can not be negative", msg.MinStandardAmt.String())
+		return sdkerrors.Wrapf(ErrTokenCount, "minimum standard token amount %s can not be negative", msg.MinStandardAmt.String())
 	}
 	if msg.Deadline <= 0 {
-		return sdk.Wrapf("deadline %d must be greater than 0", msg.Deadline)
+		return sdkerrors.Wrapf(ErrDeadline, "deadline %d must be greater than 0", msg.Deadline)
 	}
 	return nil
 }
@@ -120,27 +108,27 @@ func (msg MsgSwapOrder) GetSignBytes() []byte {
 // ValidateBasic implements Msg.
 func (msg MsgSwapOrder) ValidateBasic() error {
 	if !(msg.Input.Coin.IsValid() && msg.Input.Coin.IsPositive()) {
-		return sdk.Wrapf("invalid input (%s)", msg.Input.Coin.String())
+		return sdkerrors.Wrapf(ErrTokenCount, "invalid input (%s)", msg.Input.Coin.String())
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Input.Address); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32, err.Error())
 	}
 
 	if !(msg.Output.Coin.IsValid() && msg.Output.Coin.IsPositive()) {
-		return sdk.Wrapf("invalid output (%s)", msg.Output.Coin.String())
+		return sdkerrors.Wrapf(ErrTokenCount, "invalid output (%s)", msg.Output.Coin.String())
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Output.Address); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32, err.Error())
 	}
 
 	if msg.Input.Coin.Denom == msg.Output.Coin.Denom {
-		return sdk.Wrapf("invalid swap")
+		return sdkerrors.Wrapf(ErrDenom, "invalid swap")
 	}
 
 	if msg.Deadline <= 0 {
-		return sdk.Wrapf("deadline %d must be greater than 0", msg.Deadline)
+		return sdkerrors.Wrapf(ErrDeadline, "deadline %d must be greater than 0", msg.Deadline)
 	}
 	return nil
 }
@@ -168,8 +156,8 @@ func (m QueryLiquidityPoolsResponse) Convert() interface{} {
 	}
 }
 
-func _loadPoolInfo(info PoolInfo) sdk.PoolInfo {
-	return sdk.PoolInfo{
+func _loadPoolInfo(info PoolInfo) PoolInfo {
+	return PoolInfo{
 		Id:            info.Id,
 		EscrowAddress: info.EscrowAddress,
 		Standard:      info.Standard,
@@ -178,7 +166,7 @@ func _loadPoolInfo(info PoolInfo) sdk.PoolInfo {
 		Fee:           info.Fee,
 	}
 }
-func _loadPools(pools []PoolInfo) (ret []sdk.PoolInfo) {
+func _loadPools(pools []PoolInfo) (ret []PoolInfo) {
 	for _, pool := range pools {
 		ret = append(ret, _loadPoolInfo(pool))
 	}

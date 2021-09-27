@@ -3,9 +3,10 @@ package token
 import (
 	json2 "encoding/json"
 	"errors"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 	"strconv"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 const (
@@ -19,11 +20,6 @@ var (
 	_ sdk.Msg = &MsgTransferTokenOwner{}
 )
 
-func (msg MsgIssueToken) Route() string { return ModuleName }
-
-// Implements Msg.
-func (msg MsgIssueToken) Type() string { return "issue_token" }
-
 // Implements Msg.
 func (msg MsgIssueToken) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
@@ -31,7 +27,7 @@ func (msg MsgIssueToken) ValidateBasic() error {
 	}
 
 	if err := sdk.ValidateAccAddress(msg.Owner); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	if len(msg.Symbol) == 0 {
@@ -49,30 +45,12 @@ func (msg MsgIssueToken) ValidateBasic() error {
 	return nil
 }
 
-// Implements Msg.
-func (msg MsgIssueToken) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // Implements Msg.
 func (msg MsgIssueToken) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Owner)}
 }
 
-// GetSignBytes implements Msg
-func (msg MsgTransferTokenOwner) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // GetSigners implements Msg
 func (msg MsgTransferTokenOwner) GetSigners() []sdk.AccAddress {
@@ -85,7 +63,7 @@ func (msg MsgTransferTokenOwner) ValidateBasic() error {
 	}
 
 	if err := sdk.ValidateAccAddress(msg.SrcOwner); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	if len(msg.DstOwner) == 0 {
@@ -93,7 +71,7 @@ func (msg MsgTransferTokenOwner) ValidateBasic() error {
 	}
 
 	if err := sdk.ValidateAccAddress(msg.DstOwner); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	if len(msg.Symbol) == 0 {
@@ -120,7 +98,7 @@ func (msg MsgEditToken) ValidateBasic() error {
 	}
 
 	if err := sdk.ValidateAccAddress(msg.Owner); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	if len(msg.Symbol) == 0 {
@@ -129,33 +107,9 @@ func (msg MsgEditToken) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes implements Msg
-func (msg MsgEditToken) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
-
 // GetSigners implements Msg
 func (msg MsgEditToken) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Owner)}
-}
-
-func (msg MsgMintToken) Route() string { return ModuleName }
-
-// Type implements Msg
-func (msg MsgMintToken) Type() string { return "mint_token" }
-
-// GetSignBytes implements Msg
-func (msg MsgMintToken) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
 }
 
 // GetSigners implements Msg
@@ -170,7 +124,7 @@ func (msg MsgMintToken) ValidateBasic() error {
 	}
 
 	if err := sdk.ValidateAccAddress(msg.Owner); err != nil {
-		return sdk.Wrap(err)
+		return sdkerrors.Wrapf(ErrValidateAccAddress,err.Error())
 	}
 
 	if len(msg.Symbol) == 0 {

@@ -1,15 +1,15 @@
 package record
 
-import (
-	sdk "github.com/irisnet/irishub-sdk-go/types"
-)
+import sdk "github.com/irisnet/core-sdk-go/types"
+
+
 
 // expose Record module api for user
 type Client interface {
 	sdk.Module
 
-	CreateRecord(request CreateRecordRequest, baseTx sdk.BaseTx) (string, sdk.Error)
-	QueryRecord(request QueryRecordReq) (QueryRecordResp, sdk.Error)
+	CreateRecord(request CreateRecordRequest, baseTx sdk.BaseTx) (string, error)
+	QueryRecord(request QueryRecordReq) (QueryRecordResp, error)
 }
 
 type CreateRecordRequest struct {
@@ -24,7 +24,7 @@ type QueryRecordReq struct {
 
 type QueryRecordResp struct {
 	Record Data           `json:"record"`
-	Proof  sdk.ProofValue `json:"proof"`
+	Proof  ProofValue `json:"proof"`
 	Height int64          `json:"height"`
 }
 

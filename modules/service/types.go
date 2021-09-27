@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 const (
@@ -86,18 +86,6 @@ func (msg MsgDefineService) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgDefineService) GetSignBytes() []byte {
-	if len(msg.Tags) == 0 {
-		msg.Tags = nil
-	}
-
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 func (msg MsgDefineService) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Author)}
@@ -134,24 +122,11 @@ func (msg MsgBindService) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgBindService) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 func (msg MsgBindService) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Owner)}
 }
 
-func (msg MsgCallService) Route() string { return ModuleName }
-
-func (msg MsgCallService) Type() string {
-	return "request_service"
-}
 
 func (msg MsgCallService) ValidateBasic() error {
 	if len(msg.Consumer) == 0 {
@@ -180,14 +155,6 @@ func (msg MsgCallService) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgCallService) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 func (msg MsgCallService) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Consumer)}
@@ -220,14 +187,6 @@ func (msg MsgRespondService) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgRespondService) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 func (msg MsgRespondService) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Provider)}
@@ -240,15 +199,7 @@ func (msg MsgUpdateServiceBinding) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgUpdateServiceBinding) Type() string { return "update_service_binding" }
 
-// GetSignBytes implements Msg.
-func (msg MsgUpdateServiceBinding) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
 
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgUpdateServiceBinding) ValidateBasic() error {
@@ -289,15 +240,7 @@ func (msg MsgSetWithdrawAddress) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgSetWithdrawAddress) Type() string { return "set_withdraw_address" }
 
-// GetSignBytes implements Msg.
-func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
 
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgSetWithdrawAddress) ValidateBasic() error {
@@ -327,15 +270,6 @@ func (msg MsgDisableServiceBinding) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgDisableServiceBinding) Type() string { return "disable_service_binding" }
 
-// GetSignBytes implements Msg.
-func (msg MsgDisableServiceBinding) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgDisableServiceBinding) ValidateBasic() error {
@@ -372,15 +306,6 @@ func (msg MsgEnableServiceBinding) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgEnableServiceBinding) Type() string { return "enable_service_binding" }
 
-// GetSignBytes implements Msg.
-func (msg MsgEnableServiceBinding) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgEnableServiceBinding) ValidateBasic() error {
@@ -421,15 +346,6 @@ func (msg MsgRefundServiceDeposit) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgRefundServiceDeposit) Type() string { return "refund_service_deposit" }
 
-// GetSignBytes implements Msg.
-func (msg MsgRefundServiceDeposit) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgRefundServiceDeposit) ValidateBasic() error {
@@ -466,15 +382,6 @@ func (msg MsgPauseRequestContext) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgPauseRequestContext) Type() string { return "pause_request_context" }
 
-// GetSignBytes implements Msg.
-func (msg MsgPauseRequestContext) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgPauseRequestContext) ValidateBasic() error {
@@ -499,15 +406,6 @@ func (msg MsgStartRequestContext) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgStartRequestContext) Type() string { return "start_request_context" }
 
-// GetSignBytes implements Msg.
-func (msg MsgStartRequestContext) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgStartRequestContext) ValidateBasic() error {
@@ -532,15 +430,6 @@ func (msg MsgKillRequestContext) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgKillRequestContext) Type() string { return "kill_request_context" }
 
-// GetSignBytes implements Msg.
-func (msg MsgKillRequestContext) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgKillRequestContext) ValidateBasic() error {
@@ -566,15 +455,6 @@ func (msg MsgUpdateRequestContext) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgUpdateRequestContext) Type() string { return "update_request_context" }
 
-// GetSignBytes implements Msg.
-func (msg MsgUpdateRequestContext) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgUpdateRequestContext) ValidateBasic() error {
@@ -600,15 +480,6 @@ func (msg MsgWithdrawEarnedFees) Route() string { return ModuleName }
 // Type implements Msg.
 func (msg MsgWithdrawEarnedFees) Type() string { return "withdraw_earned_fees" }
 
-// GetSignBytes implements Msg.
-func (msg MsgWithdrawEarnedFees) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-
-	return sdk.MustSortJSON(b)
-}
 
 // ValidateBasic implements Msg.
 func (msg MsgWithdrawEarnedFees) ValidateBasic() error {

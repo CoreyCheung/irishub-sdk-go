@@ -3,21 +3,21 @@ package oracle
 import (
 	"time"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 // expose Oracle module api for user
 type Client interface {
 	sdk.Module
 
-	CreateFeed(request CreateFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	StartFeed(feedName string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	PauseFeed(FeedName string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	EditFeed(request EditFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
+	CreateFeed(request CreateFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	StartFeed(feedName string, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	PauseFeed(FeedName string, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	EditFeed(request EditFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
 
-	QueryFeed(feedName string) (QueryFeedResp, sdk.Error)
-	QueryFeeds(state string) ([]QueryFeedResp, sdk.Error)
-	QueryFeedValue(feedName string) ([]QueryFeedValueResp, sdk.Error)
+	QueryFeed(feedName string) (QueryFeedResp, error)
+	QueryFeeds(state string) ([]QueryFeedResp, error)
+	QueryFeedValue(feedName string) ([]QueryFeedValueResp, error)
 }
 
 type CreateFeedRequest struct {

@@ -2,22 +2,23 @@ package nft
 
 import (
 	"context"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	"github.com/irisnet/irishub-sdk-go/codec/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec/types"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type nftClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 }
 
-func NewClient(bc sdk.BaseClient, cdc codec.Marshaler) Client {
+func NewClient(bc sdk.BaseClient, cdc codec.Codec) Client {
 	return nftClient{
 		BaseClient: bc,
-		Marshaler:  cdc,
+		Codec:      cdc,
 	}
 }
 
@@ -29,10 +30,10 @@ func (nc nftClient) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	RegisterInterfaces(registry)
 }
 
-func (nc nftClient) IssueDenom(request IssueDenomRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (nc nftClient) IssueDenom(request IssueDenomRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := nc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress, err.Error())
 	}
 
 	msg := &MsgIssueDenom{
@@ -44,16 +45,16 @@ func (nc nftClient) IssueDenom(request IssueDenomRequest, baseTx sdk.BaseTx) (sd
 	return nc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (nc nftClient) MintNFT(request MintNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (nc nftClient) MintNFT(request MintNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := nc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress, err.Error())
 	}
 
 	var recipient = sender.String()
 	if len(request.Recipient) > 0 {
 		if err := sdk.ValidateAccAddress(request.Recipient); err != nil {
-			return sdk.ResultTx{}, sdk.Wrap(err)
+			return sdk.ResultTx{}, sdkerrors.Wrapf(ErrValidateAccAddress, err.Error())
 		}
 		recipient = request.Recipient
 	}
@@ -70,10 +71,10 @@ func (nc nftClient) MintNFT(request MintNFTRequest, baseTx sdk.BaseTx) (sdk.Resu
 	return nc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (nc nftClient) EditNFT(request EditNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (nc nftClient) EditNFT(request EditNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := nc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress, err.Error())
 	}
 
 	msg := &MsgEditNFT{
@@ -87,14 +88,14 @@ func (nc nftClient) EditNFT(request EditNFTRequest, baseTx sdk.BaseTx) (sdk.Resu
 	return nc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (nc nftClient) TransferNFT(request TransferNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (nc nftClient) TransferNFT(request TransferNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := nc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress, err.Error())
 	}
 
 	if err := sdk.ValidateAccAddress(request.Recipient); err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrValidateAccAddress, err.Error())
 	}
 
 	msg := &MsgTransferNFT{
@@ -109,10 +110,10 @@ func (nc nftClient) TransferNFT(request TransferNFTRequest, baseTx sdk.BaseTx) (
 	return nc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (nc nftClient) BurnNFT(request BurnNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (nc nftClient) BurnNFT(request BurnNFTRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := nc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress, err.Error())
 	}
 
 	msg := &MsgBurnNFT{
@@ -123,19 +124,19 @@ func (nc nftClient) BurnNFT(request BurnNFTRequest, baseTx sdk.BaseTx) (sdk.Resu
 	return nc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (nc nftClient) QuerySupply(denom, creator string) (uint64, sdk.Error) {
+func (nc nftClient) QuerySupply(denom, creator string) (uint64, error) {
 	if len(denom) == 0 {
-		return 0, sdk.Wrapf("denom is required")
+		return 0, sdkerrors.Wrapf(ErrInvalidDenom, "denom is required")
 	}
 
 	if err := sdk.ValidateAccAddress(creator); err != nil {
-		return 0, sdk.Wrap(err)
+		return 0, sdkerrors.Wrapf(ErrValidateAccAddress, err.Error())
 	}
 
 	conn, err := nc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return 0, sdk.Wrap(err)
+		return 0, sdkerrors.Wrapf(ErrGenConn, err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Supply(
@@ -146,25 +147,25 @@ func (nc nftClient) QuerySupply(denom, creator string) (uint64, sdk.Error) {
 		},
 	)
 	if err != nil {
-		return 0, sdk.Wrap(err)
+		return 0, sdkerrors.Wrapf(ErrQuerySupply, err.Error())
 	}
 
 	return res.Amount, nil
 }
 
-func (nc nftClient) QueryOwner(creator, denom string) (QueryOwnerResp, sdk.Error) {
+func (nc nftClient) QueryOwner(creator, denom string) (QueryOwnerResp, error) {
 	if len(denom) == 0 {
-		return QueryOwnerResp{}, sdk.Wrapf("denom is required")
+		return QueryOwnerResp{}, sdkerrors.Wrapf(ErrInvalidDenom, "denom is required")
 	}
 
 	if err := sdk.ValidateAccAddress(creator); err != nil {
-		return QueryOwnerResp{}, sdk.Wrap(err)
+		return QueryOwnerResp{}, sdkerrors.Wrapf(ErrValidateAccAddress, err.Error())
 	}
 
 	conn, err := nc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryOwnerResp{}, sdk.Wrap(err)
+		return QueryOwnerResp{}, sdkerrors.Wrapf(ErrGenConn, err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Owner(
@@ -175,21 +176,21 @@ func (nc nftClient) QueryOwner(creator, denom string) (QueryOwnerResp, sdk.Error
 		},
 	)
 	if err != nil {
-		return QueryOwnerResp{}, sdk.Wrap(err)
+		return QueryOwnerResp{}, sdkerrors.Wrapf(ErrQueryOwner, err.Error())
 	}
 
 	return res.Owner.Convert().(QueryOwnerResp), nil
 }
 
-func (nc nftClient) QueryCollection(denom string) (QueryCollectionResp, sdk.Error) {
+func (nc nftClient) QueryCollection(denom string) (QueryCollectionResp, error) {
 	if len(denom) == 0 {
-		return QueryCollectionResp{}, sdk.Wrapf("denom is required")
+		return QueryCollectionResp{}, sdkerrors.Wrapf(ErrInvalidDenom, "denom is required")
 	}
 
 	conn, err := nc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryCollectionResp{}, sdk.Wrap(err)
+		return QueryCollectionResp{}, sdkerrors.Wrapf(ErrGenConn, err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Collection(
@@ -197,17 +198,17 @@ func (nc nftClient) QueryCollection(denom string) (QueryCollectionResp, sdk.Erro
 		&QueryCollectionRequest{DenomId: denom},
 	)
 	if err != nil {
-		return QueryCollectionResp{}, sdk.Wrap(err)
+		return QueryCollectionResp{}, sdkerrors.Wrapf(ErrQueryCollection, err.Error())
 	}
 
 	return res.Collection.Convert().(QueryCollectionResp), nil
 }
 
-func (nc nftClient) QueryDenoms() ([]QueryDenomResp, sdk.Error) {
+func (nc nftClient) QueryDenoms() ([]QueryDenomResp, error) {
 	conn, err := nc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrGenConn, err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Denoms(
@@ -215,17 +216,17 @@ func (nc nftClient) QueryDenoms() ([]QueryDenomResp, sdk.Error) {
 		&QueryDenomsRequest{},
 	)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrQueryDenoms, err.Error())
 	}
 
 	return denoms(res.Denoms).Convert().([]QueryDenomResp), nil
 }
 
-func (nc nftClient) QueryDenom(denom string) (QueryDenomResp, sdk.Error) {
+func (nc nftClient) QueryDenom(denom string) (QueryDenomResp, error) {
 	conn, err := nc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryDenomResp{}, sdk.Wrap(err)
+		return QueryDenomResp{}, sdkerrors.Wrapf(ErrGenConn, err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Denom(
@@ -233,25 +234,25 @@ func (nc nftClient) QueryDenom(denom string) (QueryDenomResp, sdk.Error) {
 		&QueryDenomRequest{DenomId: denom},
 	)
 	if err != nil {
-		return QueryDenomResp{}, sdk.Wrap(err)
+		return QueryDenomResp{}, sdkerrors.Wrapf(ErrQueryDenoms, err.Error())
 	}
 
 	return res.Denom.Convert().(QueryDenomResp), nil
 }
 
-func (nc nftClient) QueryNFT(denom, tokenID string) (QueryNFTResp, sdk.Error) {
+func (nc nftClient) QueryNFT(denom, tokenID string) (QueryNFTResp, error) {
 	if len(denom) == 0 {
-		return QueryNFTResp{}, sdk.Wrapf("denom is required")
+		return QueryNFTResp{}, sdkerrors.Wrapf(ErrInvalidDenom, "denom is required")
 	}
 
 	if len(tokenID) == 0 {
-		return QueryNFTResp{}, sdk.Wrapf("tokenID is required")
+		return QueryNFTResp{}, sdkerrors.Wrapf(ErrInvalidTokenID, "tokenID is required")
 	}
 
 	conn, err := nc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryNFTResp{}, sdk.Wrap(err)
+		return QueryNFTResp{}, sdkerrors.Wrapf(ErrGenConn, err.Error())
 	}
 
 	res, err := NewQueryClient(conn).NFT(
@@ -262,7 +263,7 @@ func (nc nftClient) QueryNFT(denom, tokenID string) (QueryNFTResp, sdk.Error) {
 		},
 	)
 	if err != nil {
-		return QueryNFTResp{}, sdk.Wrap(err)
+		return QueryNFTResp{}, sdkerrors.Wrapf(ErrQueryNFT, err.Error())
 	}
 
 	return res.NFT.Convert().(QueryNFTResp), nil

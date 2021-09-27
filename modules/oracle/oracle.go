@@ -2,21 +2,22 @@ package oracle
 
 import (
 	"context"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	"github.com/irisnet/irishub-sdk-go/codec/types"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type oracleClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 }
 
-func NewClient(baseClient sdk.BaseClient, marshaler codec.Marshaler) Client {
+func NewClient(baseClient sdk.BaseClient, marshaler codec.Codec) Client {
 	return oracleClient{
 		BaseClient: baseClient,
-		Marshaler:  marshaler,
+		Codec:  marshaler,
 	}
 }
 
@@ -28,15 +29,15 @@ func (oc oracleClient) RegisterInterfaceTypes(registry types.InterfaceRegistry) 
 	RegisterInterfaces(registry)
 }
 
-func (oc oracleClient) CreateFeed(request CreateFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (oc oracleClient) CreateFeed(request CreateFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := oc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	serviceFeeCap, e := oc.ToMinCoin(request.ServiceFeeCap...)
 	if e != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrToMintCoin,err.Error())
 	}
 
 	msg := &MsgCreateFeed{
@@ -57,10 +58,10 @@ func (oc oracleClient) CreateFeed(request CreateFeedRequest, baseTx sdk.BaseTx) 
 	return oc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (oc oracleClient) StartFeed(feedName string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (oc oracleClient) StartFeed(feedName string, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := oc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgStartFeed{
@@ -70,10 +71,10 @@ func (oc oracleClient) StartFeed(feedName string, baseTx sdk.BaseTx) (sdk.Result
 	return oc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (oc oracleClient) PauseFeed(feedName string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (oc oracleClient) PauseFeed(feedName string, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := oc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgPauseFeed{
@@ -83,15 +84,15 @@ func (oc oracleClient) PauseFeed(feedName string, baseTx sdk.BaseTx) (sdk.Result
 	return oc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (oc oracleClient) EditFeed(request EditFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (oc oracleClient) EditFeed(request EditFeedRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := oc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	serviceFeeCap, e := oc.ToMinCoin(request.ServiceFeeCap...)
 	if e != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrToMintCoin,err.Error())
 	}
 
 	msg := &MsgEditFeed{
@@ -108,15 +109,15 @@ func (oc oracleClient) EditFeed(request EditFeedRequest, baseTx sdk.BaseTx) (sdk
 	return oc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (oc oracleClient) QueryFeed(feedName string) (QueryFeedResp, sdk.Error) {
+func (oc oracleClient) QueryFeed(feedName string) (QueryFeedResp, error) {
 	if len(feedName) == 0 {
-		return QueryFeedResp{}, sdk.Wrapf("feedName is required")
+		return QueryFeedResp{}, sdkerrors.Wrapf(ErrInvalidFeedName,"feedName is required")
 	}
 
 	conn, err := oc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryFeedResp{}, sdk.Wrap(err)
+		return QueryFeedResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Feed(
@@ -124,21 +125,21 @@ func (oc oracleClient) QueryFeed(feedName string) (QueryFeedResp, sdk.Error) {
 		&QueryFeedRequest{FeedName: feedName},
 	)
 	if err != nil {
-		return QueryFeedResp{}, sdk.Wrap(err)
+		return QueryFeedResp{}, sdkerrors.Wrapf(ErrQueryFeed,err.Error())
 	}
 	return res.Feed.Convert().(QueryFeedResp), nil
 }
 
-func (oc oracleClient) QueryFeeds(state string) ([]QueryFeedResp, sdk.Error) {
+func (oc oracleClient) QueryFeeds(state string) ([]QueryFeedResp, error) {
 	// todo state (whether state is required)
 	if len(state) == 0 {
-		return nil, sdk.Wrapf("state is required")
+		return nil, sdkerrors.Wrapf(ErrInvalidState,"state is required")
 	}
 
 	conn, err := oc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Feeds(
@@ -146,20 +147,20 @@ func (oc oracleClient) QueryFeeds(state string) ([]QueryFeedResp, sdk.Error) {
 		&QueryFeedsRequest{State: state},
 	)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrQueryFeed,err.Error())
 	}
 	return feedContexts(res.Feeds).Convert().([]QueryFeedResp), nil
 }
 
-func (oc oracleClient) QueryFeedValue(feedName string) ([]QueryFeedValueResp, sdk.Error) {
+func (oc oracleClient) QueryFeedValue(feedName string) ([]QueryFeedValueResp, error) {
 	if len(feedName) == 0 {
-		return nil, sdk.Wrapf("feedName is required")
+		return nil, sdkerrors.Wrapf(ErrInvalidFeedName,"feedName is required")
 	}
 
 	conn, err := oc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).FeedValue(
@@ -167,7 +168,7 @@ func (oc oracleClient) QueryFeedValue(feedName string) ([]QueryFeedValueResp, sd
 		&QueryFeedValueRequest{FeedName: feedName},
 	)
 	if err != nil {
-		return nil, sdk.Wrap(err)
+		return nil, sdkerrors.Wrapf(ErrQueryFeedValue,err.Error())
 	}
 	return feedValues(res.FeedValues).Convert().([]QueryFeedValueResp), nil
 }

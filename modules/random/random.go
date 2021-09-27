@@ -2,22 +2,23 @@ package random
 
 import (
 	"context"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 	"strconv"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	cdctypes "github.com/irisnet/irishub-sdk-go/codec/types"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	cdctypes "github.com/irisnet/core-sdk-go/codec/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type randomClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 }
 
-func NewClient(baseClient sdk.BaseClient, marshaler codec.Marshaler) *randomClient {
+func NewClient(baseClient sdk.BaseClient, marshaler codec.Codec) *randomClient {
 	return &randomClient{
 		BaseClient: baseClient,
-		Marshaler:  marshaler,
+		Codec:      marshaler,
 	}
 }
 
@@ -29,7 +30,7 @@ func (rc randomClient) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistr
 	RegisterInterfaces(registry)
 }
 
-func (rc randomClient) RequestRandom(request RequestRandomRequest, basTx sdk.BaseTx) (RequestRandomResp, sdk.ResultTx, sdk.Error) {
+func (rc randomClient) RequestRandom(request RequestRandomRequest, basTx sdk.BaseTx) (RequestRandomResp, sdk.ResultTx, error) {
 	author, err := rc.QueryAddress(basTx.From, basTx.Password)
 	if err != nil {
 		return RequestRandomResp{}, sdk.ResultTx{}, nil
@@ -48,15 +49,15 @@ func (rc randomClient) RequestRandom(request RequestRandomRequest, basTx sdk.Bas
 
 	reqID, e := result.Events.GetValue(eventTypeRequestRequestRandom, attributeKeyRequestID)
 	if e != nil {
-		return RequestRandomResp{}, result, sdk.Wrap(e)
+		return RequestRandomResp{}, result, sdkerrors.Wrapf(ErrEventsGetValue,e.Error())
 	}
 	generateHeight, e := result.Events.GetValue(eventTypeRequestRequestRandom, attributeKeyGenerateHeight)
 	if e != nil {
-		return RequestRandomResp{}, result, sdk.Wrap(e)
+		return RequestRandomResp{}, result, sdkerrors.Wrapf(ErrEventsGetValue,e.Error())
 	}
 	height, e := strconv.Atoi(generateHeight)
 	if e != nil {
-		return RequestRandomResp{}, result, sdk.Wrap(e)
+		return RequestRandomResp{}, result, sdkerrors.Wrapf(ErrAtoi,e.Error())
 	}
 
 	res := RequestRandomResp{
@@ -66,15 +67,15 @@ func (rc randomClient) RequestRandom(request RequestRandomRequest, basTx sdk.Bas
 	return res, result, nil
 }
 
-func (rc randomClient) QueryRandom(reqID string) (QueryRandomResp, sdk.Error) {
+func (rc randomClient) QueryRandom(reqID string) (QueryRandomResp, error) {
 	if len(reqID) == 0 {
-		return QueryRandomResp{}, sdk.Wrapf("reqId is required")
+		return QueryRandomResp{}, sdkerrors.Wrapf(ErrInvalidReqID,"reqId is required")
 	}
 
 	conn, err := rc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryRandomResp{}, sdk.Wrap(err)
+		return QueryRandomResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Random(
@@ -82,12 +83,12 @@ func (rc randomClient) QueryRandom(reqID string) (QueryRandomResp, sdk.Error) {
 		&QueryRandomRequest{ReqId: reqID},
 	)
 	if err != nil {
-		return QueryRandomResp{}, sdk.Wrap(err)
+		return QueryRandomResp{}, sdkerrors.Wrapf(ErrQueryRandom,err.Error())
 	}
 	return res.Random.Convert().(QueryRandomResp), nil
 }
 
-func (rc randomClient) QueryRandomRequestQueue(height int64) ([]QueryRandomRequestQueueResp, sdk.Error) {
+func (rc randomClient) QueryRandomRequestQueue(height int64) ([]QueryRandomRequestQueueResp, error) {
 	if height == 0 {
 		return []QueryRandomRequestQueueResp{}, nil
 	}
@@ -95,14 +96,14 @@ func (rc randomClient) QueryRandomRequestQueue(height int64) ([]QueryRandomReque
 	conn, err := rc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return []QueryRandomRequestQueueResp{}, sdk.Wrap(err)
+		return []QueryRandomRequestQueueResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 	res, err := NewQueryClient(conn).RandomRequestQueue(
 		context.Background(),
 		&QueryRandomRequestQueueRequest{Height: height},
 	)
 	if err != nil {
-		return []QueryRandomRequestQueueResp{}, sdk.Wrap(err)
+		return []QueryRandomRequestQueueResp{}, sdkerrors.Wrapf(ErrQueryRequestQueue,err.Error())
 	}
 	return Requests(res.Requests).Convert().([]QueryRandomRequestQueueResp), nil
 }

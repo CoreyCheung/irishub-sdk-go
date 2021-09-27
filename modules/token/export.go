@@ -1,16 +1,14 @@
 package token
 
-import (
-	sdk "github.com/irisnet/irishub-sdk-go/types"
-)
+import sdk "github.com/irisnet/core-sdk-go/types"
 
 type Client interface {
 	sdk.Module
 
-	IssueToken(req IssueTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	EditToken(req EditTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	TransferToken(to string, symbol string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
-	MintToken(symbol string, amount uint64, to string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error)
+	IssueToken(req IssueTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	EditToken(req EditTokenRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	TransferToken(to string, symbol string, baseTx sdk.BaseTx) (sdk.ResultTx, error)
+	MintToken(symbol string, amount uint64, to string, baseTx sdk.BaseTx) (sdk.ResultTx, error)
 
 	QueryToken(symbol string) (sdk.Token, error)
 	QueryTokens(owner string) (sdk.Tokens, error)

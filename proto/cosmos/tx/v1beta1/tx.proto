@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/irisnet/irishub-sdk-go/types/tx";
+option go_package = "github.com/irisnet/core-sdk-go/types/tx";
 
 // Tx is the standard type used for broadcasting transactions.
 message Tx {
@@ -164,7 +164,7 @@ message ModeInfo {
 message Fee {
   // amount is the amount of coins to be paid as a fee
   repeated cosmos.base.v1beta1.Coin amount = 1
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/irisnet/irishub-sdk-go/types.Coins"];
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/irisnet/core-sdk-go/types.Coins"];
 
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs

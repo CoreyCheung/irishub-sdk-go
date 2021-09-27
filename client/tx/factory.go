@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
-	"github.com/irisnet/irishub-sdk-go/types/tx/signing"
+	sdk "github.com/irisnet/core-sdk-go/types"
+	typessign "github.com/irisnet/core-sdk-go/types/signing"
+	"github.com/irisnet/core-sdk-go/types/tx/signing"
 )
 
 // Factory defines a client transaction factory that facilitates generating and
@@ -26,7 +27,7 @@ type (
 		gasPrices          sdk.DecCoins
 		mode               sdk.BroadcastMode
 		signMode           signing.SignMode
-		signModeHandler    sdk.SignModeHandler
+		signModeHandler    typessign.SignModeHandler
 		keyManager         sdk.KeyManager
 		txConfig           sdk.TxConfig
 		queryFunc          QueryWithData
@@ -157,7 +158,7 @@ func (f *Factory) WithTxConfig(txConfig sdk.TxConfig) *Factory {
 }
 
 // WithSignModeHandler returns a pointer of the context with an signModeHandler.
-func (f *Factory) WithSignModeHandler(signModeHandler sdk.SignModeHandler) *Factory {
+func (f *Factory) WithSignModeHandler(signModeHandler typessign.SignModeHandler) *Factory {
 	f.signModeHandler = signModeHandler
 	return f
 }
@@ -240,7 +241,7 @@ func (f *Factory) Sign(name string, txBuilder sdk.TxBuilder) error {
 		// use the SignModeHandler's default mode if unspecified
 		signMode = f.txConfig.SignModeHandler().DefaultMode()
 	}
-	signerData := sdk.SignerData{
+	signerData := typessign.SignerData{
 		ChainID:       f.chainID,
 		AccountNumber: f.accountNumber,
 		Sequence:      f.sequence,

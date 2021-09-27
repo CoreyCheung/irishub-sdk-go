@@ -7,8 +7,8 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/irishub-sdk-go/types"
-	types "github.com/irisnet/irishub-sdk-go/types"
+	github_com_irisnet_irishub_sdk_go_types "github.com/irisnet/core-sdk-go/types"
+	types "github.com/irisnet/core-sdk-go/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -92,7 +92,7 @@ type Request struct {
 	Consumer         string                                        `protobuf:"bytes,2,opt,name=consumer,proto3" json:"consumer,omitempty"`
 	TxHash           string                                        `protobuf:"bytes,3,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty" yaml:"tx_hash"`
 	Oracle           bool                                          `protobuf:"varint,4,opt,name=oracle,proto3" json:"oracle,omitempty"`
-	ServiceFeeCap    github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,5,rep,name=service_fee_cap,json=serviceFeeCap,proto3,castrepeated=github.com/irisnet/irishub-sdk-go/types.Coins" json:"service_fee_cap" yaml:"service_fee_cap"`
+	ServiceFeeCap    github_com_irisnet_irishub_sdk_go_types.Coins `protobuf:"bytes,5,rep,name=service_fee_cap,json=serviceFeeCap,proto3,castrepeated=github.com/irisnet/core-sdk-go/types.Coins" json:"service_fee_cap" yaml:"service_fee_cap"`
 	ServiceContextId string                                        `protobuf:"bytes,6,opt,name=service_context_id,json=serviceContextId,proto3" json:"service_context_id,omitempty"`
 }
 

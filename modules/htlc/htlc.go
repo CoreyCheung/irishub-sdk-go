@@ -2,21 +2,22 @@ package htlc
 
 import (
 	"context"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 
-	"github.com/irisnet/irishub-sdk-go/codec"
-	"github.com/irisnet/irishub-sdk-go/codec/types"
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/codec"
+	"github.com/irisnet/core-sdk-go/codec/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 type htlcClient struct {
 	sdk.BaseClient
-	codec.Marshaler
+	codec.Codec
 }
 
-func NewClient(baseClient sdk.BaseClient, marshaler codec.Marshaler) Client {
+func NewClient(baseClient sdk.BaseClient, marshaler codec.Codec) Client {
 	return htlcClient{
 		BaseClient: baseClient,
-		Marshaler:  marshaler,
+		Codec:  marshaler,
 	}
 }
 
@@ -28,10 +29,10 @@ func (hc htlcClient) RegisterInterfaceTypes(registry types.InterfaceRegistry) {
 	RegisterInterfaces(registry)
 }
 
-func (hc htlcClient) CreateHTLC(request CreateHTLCRequest, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (hc htlcClient) CreateHTLC(request CreateHTLCRequest, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := hc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	if request.TimeLock == 0 {
@@ -40,7 +41,7 @@ func (hc htlcClient) CreateHTLC(request CreateHTLCRequest, baseTx sdk.BaseTx) (s
 
 	amount, err := hc.ToMinCoin(request.Amount...)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrToMintCoin,err.Error())
 	}
 
 	msg := &MsgCreateHTLC{
@@ -57,10 +58,10 @@ func (hc htlcClient) CreateHTLC(request CreateHTLCRequest, baseTx sdk.BaseTx) (s
 	return hc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (hc htlcClient) ClaimHTLC(hashLockId string, secret string, baseTx sdk.BaseTx) (sdk.ResultTx, sdk.Error) {
+func (hc htlcClient) ClaimHTLC(hashLockId string, secret string, baseTx sdk.BaseTx) (sdk.ResultTx, error) {
 	sender, err := hc.QueryAddress(baseTx.From, baseTx.Password)
 	if err != nil {
-		return sdk.ResultTx{}, sdk.Wrap(err)
+		return sdk.ResultTx{}, sdkerrors.Wrapf(ErrQueryAddress,err.Error())
 	}
 
 	msg := &MsgClaimHTLC{
@@ -71,15 +72,15 @@ func (hc htlcClient) ClaimHTLC(hashLockId string, secret string, baseTx sdk.Base
 	return hc.BuildAndSend([]sdk.Msg{msg}, baseTx)
 }
 
-func (hc htlcClient) QueryHTLC(hashLockId string) (QueryHTLCResp, sdk.Error) {
+func (hc htlcClient) QueryHTLC(hashLockId string) (QueryHTLCResp, error) {
 	if len(hashLockId) == 0 {
-		return QueryHTLCResp{}, sdk.Wrapf("hashLock id is required")
+		return QueryHTLCResp{}, sdkerrors.Wrapf(ErrInvalidRequest,"hashLock id is required")
 	}
 
 	conn, err := hc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryHTLCResp{}, sdk.Wrap(err)
+		return QueryHTLCResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).HTLC(
@@ -88,24 +89,24 @@ func (hc htlcClient) QueryHTLC(hashLockId string) (QueryHTLCResp, sdk.Error) {
 			Id: hashLockId,
 		})
 	if err != nil {
-		return QueryHTLCResp{}, sdk.Wrap(err)
+		return QueryHTLCResp{}, sdkerrors.Wrapf(ErrQueryHTLC,err.Error())
 	}
 	return res.Htlc.Convert().(QueryHTLCResp), nil
 }
 
-func (hc htlcClient) QueryParams() (QueryParamsResp, sdk.Error) {
+func (hc htlcClient) QueryParams() (QueryParamsResp, error) {
 
 	conn, err := hc.GenConn()
 	defer func() { _ = conn.Close() }()
 	if err != nil {
-		return QueryParamsResp{}, sdk.Wrap(err)
+		return QueryParamsResp{}, sdkerrors.Wrapf(ErrGenConn,err.Error())
 	}
 
 	res, err := NewQueryClient(conn).Params(
 		context.Background(),
 		&QueryParamsRequest{})
 	if err != nil {
-		return QueryParamsResp{}, sdk.Wrap(err)
+		return QueryParamsResp{}, sdkerrors.Wrapf(ErrQueryParams,err.Error())
 	}
 	return res.Params.Convert().(QueryParamsResp), nil
 }

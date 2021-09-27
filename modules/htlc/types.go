@@ -2,8 +2,9 @@ package htlc
 
 import (
 	"encoding/hex"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
 )
 
 const (
@@ -22,39 +23,33 @@ var (
 	_ sdk.Msg = &MsgClaimHTLC{}
 )
 
-func (msg MsgCreateHTLC) Route() string { return ModuleName }
-
-func (msg MsgCreateHTLC) Type() string { return "create_htlc" }
 
 func (msg MsgCreateHTLC) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdk.Wrapf("invalid sender address (%s)", err)
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid sender address (%s)", err)
 	}
 	if len(msg.To) == 0 {
-		return sdk.Wrapf("recipient missing")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,"recipient missing")
 	}
 	if len(msg.ReceiverOnOtherChain) > MaxLengthForAddressOnOtherChain {
-		return sdk.Wrapf("length of the receiver on other chain must be between [0,%d]", MaxLengthForAddressOnOtherChain)
+		return sdkerrors.Wrapf(ErrInvalidLength,"length of the receiver on other chain must be between [0,%d]", MaxLengthForAddressOnOtherChain)
 	}
 	if !msg.Amount.IsValid() || !msg.Amount.IsAllPositive() {
-		return sdk.Wrapf("the transferred amount must be valid")
+		return sdkerrors.Wrapf(ErrTokenCount,"the transferred amount must be valid")
 	}
 	if _, err := hex.DecodeString(msg.HashLock); err != nil {
-		return sdk.Wrapf("hash lock must be a hex encoded string")
+		return sdkerrors.Wrapf(ErrDecodeString,"hash lock must be a hex encoded string")
 	}
 	if len(msg.HashLock) != HashLockLength {
-		return sdk.Wrapf("length of the hash lock must be %d in bytes", HashLockLength)
+		return sdkerrors.Wrapf(ErrInvalidLength,"length of the hash lock must be %d in bytes", HashLockLength)
 	}
 	if msg.TimeLock < MinTimeLock || msg.TimeLock > MaxTimeLock {
-		return sdk.Wrapf("the time lock must be between [%d,%d]", MinTimeLock, MaxTimeLock)
+		return sdkerrors.Wrapf(ErrTimeLock,"the time lock must be between [%d,%d]", MinTimeLock, MaxTimeLock)
 	}
 	return nil
 }
 
-func (msg MsgCreateHTLC) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
+
 
 func (msg MsgCreateHTLC) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -70,27 +65,24 @@ func (msg MsgClaimHTLC) Type() string { return "claim_htlc" }
 
 func (msg MsgClaimHTLC) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdk.Wrapf("invalid sender address (%s)", err)
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid sender address (%s)", err)
 	}
 	if _, err := hex.DecodeString(msg.Id); err != nil {
-		return sdk.Wrapf("htlc id must be a hex encoded string")
+		return sdkerrors.Wrapf(ErrDecodeString,"htlc id must be a hex encoded string")
 	}
 	if len(msg.Id) != HTLCIDLength {
-		return sdk.Wrapf("length of the htlc id must be %d in bytes", HashLockLength)
+		return sdkerrors.Wrapf(ErrInvalidLength,"length of the htlc id must be %d in bytes", HashLockLength)
 	}
 	if _, err := hex.DecodeString(msg.Secret); err != nil {
-		return sdk.Wrapf("secret must be a hex encoded string")
+		return sdkerrors.Wrapf(ErrDecodeString,"secret must be a hex encoded string")
 	}
 	if len(msg.Secret) != SecretLength {
-		return sdk.Wrapf("length of the secret must be %d in bytes", SecretLength)
+		return sdkerrors.Wrapf(ErrInvalidLength,"length of the secret must be %d in bytes", SecretLength)
 	}
 	return nil
 }
 
-func (msg MsgClaimHTLC) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
+
 
 func (msg MsgClaimHTLC) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.Sender)

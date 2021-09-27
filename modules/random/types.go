@@ -1,7 +1,8 @@
 package random
 
 import (
-	sdk "github.com/irisnet/irishub-sdk-go/types"
+	sdk "github.com/irisnet/core-sdk-go/types"
+	sdkerrors "github.com/irisnet/core-sdk-go/types/errors"
 )
 
 const (
@@ -16,28 +17,15 @@ var (
 	_ sdk.Msg = &MsgRequestRandom{}
 )
 
-// Route implements Msg.
-func (msg MsgRequestRandom) Route() string { return ModuleName }
-
-// Type implements Msg.
-func (msg MsgRequestRandom) Type() string { return "request_rand" }
 
 // ValidateBasic implements Msg.
 func (msg MsgRequestRandom) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Consumer); err != nil {
-		return sdk.Wrapf("invalid consumer address (%s)", err)
+		return sdkerrors.Wrapf(ErrAccAddressFromBech32,"invalid consumer address (%s)", err)
 	}
 	return nil
 }
 
-// GetSignBytes implements Msg.
-func (msg MsgRequestRandom) GetSignBytes() []byte {
-	b, err := ModuleCdc.MarshalJSON(&msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
 
 // GetSigners implements Msg.
 func (msg MsgRequestRandom) GetSigners() []sdk.AccAddress {
